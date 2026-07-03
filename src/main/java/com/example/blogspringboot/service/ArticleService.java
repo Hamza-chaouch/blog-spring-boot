@@ -9,6 +9,7 @@ import com.example.blogspringboot.entity.Tag;
 import com.example.blogspringboot.entity.User;
 import com.example.blogspringboot.exception.ForbiddenException;
 import com.example.blogspringboot.exception.ResourceNotFoundException;
+import com.example.blogspringboot.mapper.ArticleMapper;
 import com.example.blogspringboot.repository.ArticleRepository;
 import com.example.blogspringboot.repository.TagRepository;
 import com.example.blogspringboot.repository.UserRepository;
@@ -28,17 +29,18 @@ public class ArticleService {
     private final ArticleRepository articleRepository;
     private final UserRepository userRepository;
     private final TagRepository tagRepository;
+    private final ArticleMapper articleMapper;
 
     public List<ArticleResponse> findAll() {
         return articleRepository.findAll()
                 .stream()
-                .map(this::toResponse)
+                .map(articleMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
     public ArticleResponse findById(Long id) {
         Article article = getArticleOrThrow(id);
-        return toResponse(article);
+        return articleMapper.toResponse(article);
     }
 
     public ArticleResponse create(ArticleRequest request, Long authorId) {
@@ -53,7 +55,7 @@ public class ArticleService {
                 .build();
 
         Article saved = articleRepository.save(article);
-        return toResponse(saved);
+        return articleMapper.toResponse(saved);
     }
 
     public ArticleResponse update(Long id, ArticleRequest request, Long currentUserId) {
@@ -65,7 +67,7 @@ public class ArticleService {
         article.setTags(resolveTags(request.getTags()));
 
         Article updated = articleRepository.save(article);
-        return toResponse(updated);
+        return articleMapper.toResponse(updated);
     }
 
     public void delete(Long id, Long currentUserId) {
@@ -97,22 +99,4 @@ public class ArticleService {
                 .collect(Collectors.toSet());
     }
 
-    private ArticleResponse toResponse(Article article) {
-        return ArticleResponse.builder()
-                .id(article.getId())
-                .title(article.getTitle())
-                .content(article.getContent())
-                .author(UserResponse.builder()
-                        .id(article.getAuthor().getId())
-                        .email(article.getAuthor().getEmail())
-                        .username(article.getAuthor().getUsername())
-                        .createdAt(article.getAuthor().getCreatedAt())
-                        .build())
-                .tags(article.getTags().stream()
-                        .map(tag -> TagResponse.builder().id(tag.getId()).name(tag.getName()).build())
-                        .collect(Collectors.toSet()))
-                .createdAt(article.getCreatedAt())
-                .updatedAt(article.getUpdatedAt())
-                .build();
-    }
 }

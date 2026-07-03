@@ -6,6 +6,7 @@ import com.example.blogspringboot.dto.user.UserResponse;
 import com.example.blogspringboot.entity.Article;
 import com.example.blogspringboot.entity.Tag;
 import com.example.blogspringboot.exception.ResourceNotFoundException;
+import com.example.blogspringboot.mapper.ArticleMapper;
 import com.example.blogspringboot.repository.ArticleRepository;
 import com.example.blogspringboot.repository.TagRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ public class TagService {
 
     private final TagRepository tagRepository;
     private final ArticleRepository articleRepository;
+    private final ArticleMapper articleMapper;
 
     public List<TagResponse> findAll() {
         return tagRepository.findAll()
@@ -36,7 +38,7 @@ public class TagService {
 
         return articleRepository.findByTagName(tagName)
                 .stream()
-                .map(this::toArticleResponse)
+                .map(articleMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -53,22 +55,4 @@ public class TagService {
                 .build();
     }
 
-    private ArticleResponse toArticleResponse(Article article) {
-        return ArticleResponse.builder()
-                .id(article.getId())
-                .title(article.getTitle())
-                .content(article.getContent())
-                .author(UserResponse.builder()
-                        .id(article.getAuthor().getId())
-                        .email(article.getAuthor().getEmail())
-                        .username(article.getAuthor().getUsername())
-                        .createdAt(article.getAuthor().getCreatedAt())
-                        .build())
-                .tags(article.getTags().stream()
-                        .map(this::toResponse)
-                        .collect(Collectors.toSet()))
-                .createdAt(article.getCreatedAt())
-                .updatedAt(article.getUpdatedAt())
-                .build();
-    }
 }
